@@ -1,21 +1,51 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
+import questionAttemptStatus from "../constants/enum/questionAttemptStatus.enum.js";
+import assessmentAttemptStatus from "../constants/enum/assessmentAttemptStatus.enum.js";
+import userRole from "../constants/enum/userRole.enum.js";
 
 const answerSchema = new mongoose.Schema({
-  questionId: { type: mongoose.Schema.Types.ObjectId, ref: 'Question' },
+  questionId: { type: mongoose.Schema.Types.ObjectId, ref: "Question" },
   selectedOptions: [String],
-  isCorrect: Boolean,
+  isCorrect: {
+    type: Boolean,
+    default: false,
+  },
+  //each answers should have items like attended, not attended, mark for review etc...
+  status: {
+    type: String,
+    enum: Object.values(questionAttemptStatus),
+    default: questionAttemptStatus.NOT_ATTENDED,
+  },
   obtainedMarks: Number,
 });
 
-const assessmentAttemptSchema = new mongoose.Schema({
-  candidateId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  assessmentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Assessment' },
-  answers: [answerSchema],
-  totalScore: Number,
-  sectionScores: Map,
-  status: { type: String, enum: ['IN_PROGRESS', 'SUBMITTED', 'EVALUATED'], default: 'IN_PROGRESS' },
-  startedAt: Date,
-  submittedAt: Date,
-}, { timestamps: true });
+const assessmentAttemptSchema = new mongoose.Schema(
+  {
+    candidateId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    assessmentId: { type: mongoose.Schema.Types.ObjectId, ref: "Assessment" },
+    answers: [answerSchema],
+    totalScore: Number,
+    sectionScores: Map,
+    status: {
+      type: String,
+      enum: Object.values(assessmentAttemptStatus),
+      default: assessmentAttemptStatus.IN_PROGRESS,
+    },
+    startedAt: Date,
+    submittedAt: Date,
+  },
+  { timestamps: true }
+);
 
-export default mongoose.model('AssessmentAttempt', assessmentAttemptSchema);
+// Middleware to enforce only candidate to attend the test
+assessmentAttemptSchema.pre("save", async function (next) {
+  const creator = await User.findById(this.createdBy);
+  if (!creator || creator.role !== userRole.CANDIDATE) {
+    const err = new Error("Only candidate can attend the assessments.");
+    err.statusCode = 403;
+    return next(err);
+  }
+  next();
+});
+
+export default mongoose.model("AssessmentAttempt", assessmentAttemptSchema);

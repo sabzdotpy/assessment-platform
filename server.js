@@ -5,51 +5,28 @@ import cors from "cors";
 import jwt from "jsonwebtoken";
 
 // Import routes
+//candidate routes imports
+import candidateAssessmentRoutes from "./routes/candidate/assessment.delivery.routes.js";
+import candidateAttemptRoutes from "./routes/candidate/attempt.routes.js";
+
+//admin routes
+import adminRoutes from "./routes/admin/admin.routes.js";
+
 import assessmentRoutes from "./routes/assessment.routes.js";
 import sectionRoutes from "./routes/section.routes.js";
 import questionRoutes from "./routes/question.routes.js";
-import attemptRoutes from "./routes/attempt.routes.js";
 
 import User from "./models/user.model.js";
+import authMiddleware from "./middlewares/auth.middleware.js";
 
 dotenv.config();
 
 const app = express();
 
-// Middlewares
 app.use(cors());
 app.use(express.json());
 
-// ================================
-// Middleware Setup
-// ================================
-app.use(cors());
-app.use(express.json());
-
-// JWT Auth Middleware
-const authMiddleware = (roles = []) => {
-  return (req, res, next) => {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({ message: "Unauthorized: Token missing" });
-    }
-    const token = authHeader.split(" ")[1];
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      req.user = decoded;
-      if (roles.length && !roles.includes(decoded.role)) {
-        return res.status(403).json({ message: "Forbidden: Access denied" });
-      }
-      next();
-    } catch (err) {
-      return res.status(401).json({ message: "Invalid token" });
-    }
-  };
-};
-
-// ================================
-// Auth Routes (Register & Login)
-// ================================
+// Common Auth Routes (Register & Login)
 app.post("/api/auth/register", async (req, res) => {
   const { name, email, password, role } = req.body;
   try {
@@ -87,9 +64,7 @@ app.post("/api/auth/login", async (req, res) => {
   }
 });
 
-// ================================
-// Route Bindings (with auth)
-// ================================
+// common routes (For both admin and trainer)
 app.use(
   "/api/assessments",
   authMiddleware(["admin", "trainer"]),
@@ -97,7 +72,13 @@ app.use(
 );
 app.use("/api/sections", authMiddleware(["admin", "trainer"]), sectionRoutes);
 app.use("/api/questions", authMiddleware(["admin", "trainer"]), questionRoutes);
-app.use("/api/attempts", authMiddleware(["candidate"]), attemptRoutes);
+
+//candidate routes
+app.use("/api/v1/candidate/assessments", candidateAssessmentRoutes);
+app.use("/api/v1/candidate/attempts", candidateAttemptRoutes);
+
+//admin routes
+app.use("/api/v1/admin", adminRoutes);
 
 // Root route
 app.get("/", (req, res) => {
