@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import questionAttemptStatus from "../constants/enum/questionAttemptStatus.enum.js";
 import assessmentAttemptStatus from "../constants/enum/assessmentAttemptStatus.enum.js";
 import userRole from "../constants/enum/userRole.enum.js";
+import User from "./user.model.js";
 
 const answerSchema = new mongoose.Schema({
   questionId: { type: mongoose.Schema.Types.ObjectId, ref: "Question" },
@@ -39,8 +40,9 @@ const assessmentAttemptSchema = new mongoose.Schema(
 
 // Middleware to enforce only candidate to attend the test
 assessmentAttemptSchema.pre("save", async function (next) {
-  const creator = await User.findById(this.createdBy);
-  if (!creator || creator.role !== userRole.CANDIDATE) {
+  const creator = await User.findById(this.candidateId);
+  console.log(creator);
+  if (!creator || !(creator.role === userRole.CANDIDATE)) {
     const err = new Error("Only candidate can attend the assessments.");
     err.statusCode = 403;
     return next(err);
@@ -48,4 +50,8 @@ assessmentAttemptSchema.pre("save", async function (next) {
   next();
 });
 
-export default mongoose.model("AssessmentAttempt", assessmentAttemptSchema);
+const AssessmentAttempt = mongoose.model(
+  "AssessmentAttempt",
+  assessmentAttemptSchema
+);
+export default AssessmentAttempt;

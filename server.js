@@ -75,7 +75,7 @@ app.use("/api/questions", authMiddleware(["admin", "trainer"]), questionRoutes);
 
 //candidate routes
 app.use("/api/v1/candidate/assessments", candidateAssessmentRoutes);
-app.use("/api/v1/candidate/attempts", candidateAttemptRoutes);
+app.use("/api/v1/candidate/attempts",authMiddleware([ "candidate"]) ,candidateAttemptRoutes);
 
 //admin routes
 app.use("/api/v1/admin", adminRoutes);

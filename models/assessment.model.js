@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import assessmentDifficulty from "../constants/enum/assessmentDifficulty.enum.js";
 import userRole from "../constants/enum/userRole.enum.js";
+import User from "./user.model.js";
 
 const assessmentSchema = new mongoose.Schema(
   {
@@ -14,23 +15,29 @@ const assessmentSchema = new mongoose.Schema(
     },
     sections: [{ type: mongoose.Schema.Types.ObjectId, ref: "Section" }],
     assignedTo: [{ type: mongoose.Schema.Types.ObjectId, ref: "Group" }],
-    startTime: Date,
-    endTime: Date,
+
+    //we will add this later
+
+    // startTime: Date,
+    // endTime: Date,
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     isPublished: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
 
-
 // Middleware to enforce createdBy is admin and trainer
-assessmentSchema.pre('save', async function (next) {
+assessmentSchema.pre("save", async function (next) {
   const creator = await User.findById(this.createdBy);
-  if (!creator || creator.role !== userRole.ADMIN || creator.role != userRole.TRAINER) {
-    const err = new Error('Only admins can create assessments.');
+  if (
+    !creator ||
+    !(creator.role === userRole.ADMIN || creator.role === userRole.TRAINER)
+  ) {
+    const err = new Error("Only admins and trainers can create assessments.");
     err.statusCode = 403;
     return next(err);
   }
+
   next();
 });
 export default mongoose.model("Assessment", assessmentSchema);

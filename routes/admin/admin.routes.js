@@ -2,7 +2,7 @@
 import express from "express";
 import multer from "multer";
 
-import authMiddleware  from "../../middlewares/auth.middleware.js";
+import authMiddleware from "../../middlewares/auth.middleware.js";
 import { addBulkUserFromCSV } from "../../controllers/admin/admin.controller.js";
 
 const router = express.Router();
@@ -13,7 +13,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 // Route: POST /api/admin/bulk-csv-upload
 router.post(
   "/bulk-csv-upload",
-  authMiddleware(["admin"]),
+  authMiddleware(["admin", "trainer"]),
   upload.single("file"),
   addBulkUserFromCSV
 );

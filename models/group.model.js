@@ -9,7 +9,6 @@ const groupSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export default mongoose.model("Group", groupSchema);
-
+const Group = mongoose.model("Group", groupSchema);
+export default Group;
 //create a middleware to check the memebers and candidate only and trainerId contains only id that are trainers
- 

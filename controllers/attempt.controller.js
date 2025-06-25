@@ -1,10 +1,11 @@
 import assessmentAttemptStatus from "../constants/enum/assessmentAttemptStatus.enum.js";
+import questionAttemptStatus from "../constants/enum/questionAttemptStatus.enum.js";
 import Assessment from "../models/assessment.model.js";
 import AssessmentAttempt from "../models/assessmentAttempt.model.js";
 import Question from "../models/question.model.js";
 
 export const submitAttempt = async (req, res) => {
-  const candidateId = req.user._id;
+  const candidateId = req.user.id;
   const { attemptId } = req.params;
   const { answers } = req.body;
 
@@ -41,6 +42,7 @@ export const submitAttempt = async (req, res) => {
 
       const selected = normalize(answer.selectedOptions);
       const correct = normalize(question.correctAnswers);
+      console.log(selected, correct);
 
       // do we need to check case sensitivity
       const isCorrect = JSON.stringify(selected) === JSON.stringify(correct);
@@ -57,7 +59,7 @@ export const submitAttempt = async (req, res) => {
       } else {
         answer.status =
           answer.selectedOptions && answer.selectedOptions.length > 0
-            ? questionAttemptStatus.ATTEMPTED
+            ? questionAttemptStatus.ATTENDED
             : questionAttemptStatus.NOT_ATTENDED;
       }
 
@@ -87,37 +89,39 @@ export const submitAttempt = async (req, res) => {
   }
 };
 
-
 export const startAttempt = async (req, res) => {
-  const candidateId = req.user._id;
+  const candidateId = req.user.id;
   const assessmentId = req.params.assessmentId;
-  
+
   //check for id is valid or not
 
   try {
-     // Prevent duplicate attempt
+    // Prevent duplicate attempt
     const existing = await AssessmentAttempt.findOne({
       candidateId,
       assessmentId,
     });
 
     if (existing) {
-      return res.status(400).json({ message: "You have already started this assessment." });
+      return res
+        .status(400)
+        .json({ message: "You have already started this assessment." });
     }
-    
+
     // Validate assessment
     const now = new Date();
     const assessment = await Assessment.findOne({
       _id: assessmentId,
       isPublished: true,
-      startTime: { $lte: now },
-      endTime: { $gte: now },
+      // startTime: { $lte: now },
+      // endTime: { $gte: now },
     });
 
     if (!assessment) {
-      return res.status(404).json({ message: "Assessment is not available to attempt." });
+      return res
+        .status(404)
+        .json({ message: "Assessment is not available to attempt." });
     }
-
 
     const attempt = await AssessmentAttempt.create({
       candidateId,
@@ -129,7 +133,6 @@ export const startAttempt = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
 
 export const getMyAttempts = async (req, res) => {
   const candidateId = req.user.id;
@@ -148,7 +151,6 @@ export const getMyAttempts = async (req, res) => {
   }
 };
 
-
 export const getAttemptById = async (req, res) => {
   const candidateId = req.user.id;
   const { attemptId } = req.params;
@@ -159,21 +161,22 @@ export const getAttemptById = async (req, res) => {
       candidateId,
     })
       .populate({
-        path: 'assessmentId',
-        select: 'title duration',
+        path: "assessmentId",
+        select: "title duration",
       })
       .populate({
-        path: 'answers.questionId',
-        select: 'questionText options correctAnswers explanation',
+        path: "answers.questionId",
+        select: "questionText options correctAnswers explanation",
       });
 
     if (!attempt) {
-      return res.status(404).json({ message: 'Attempt not found or access denied' });
+      return res
+        .status(404)
+        .json({ message: "Attempt not found or access denied" });
     }
 
     res.status(200).json({ attempt });
   } catch (error) {
-    res.status(500).json({ message: 'Failed to fetch attempt result', error });
+    res.status(500).json({ message: "Failed to fetch attempt result", error });
   }
 };
-
