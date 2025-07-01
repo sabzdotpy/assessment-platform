@@ -1,5 +1,4 @@
 import express from "express";
-import mongoose from "mongoose";
 import dotenv from "dotenv";
 import cors from "cors";
 import jwt from "jsonwebtoken";
@@ -18,12 +17,19 @@ import questionRoutes from "./routes/question.routes.js";
 
 import User from "./models/user.model.js";
 import authMiddleware from "./middlewares/auth.middleware.js";
+import connectDB from "./database/mongodb.js";
+import { PORT } from "./config/env.js";
+import errorMiddleware from "./middlewares/handleError.js";
 
 dotenv.config();
 
 const app = express();
 
-app.use(cors());
+app.use(cors({
+  origin: "http://localhost:3000", 
+  credentials: true,
+}));
+
 app.use(express.json());
 
 // Common Auth Routes (Register & Login)
@@ -85,18 +91,20 @@ app.get("/", (req, res) => {
   res.send("Assessment Platform API is running");
 });
 
-// MongoDB Connection & Server Start
-const PORT = process.env.PORT;
-const MONGO_URI = process.env.MONGO_URI;
+app.use(errorMiddleware);
 
-mongoose
-  .connect(MONGO_URI)
-  .then(() => {
-    console.log("✅ MongoDB connected");
-    app.listen(PORT, () =>
-      console.log(`🚀 Server running on port http://localhost:${PORT}`)
-    );
-  })
-  .catch((err) => {
-    console.error("❌ MongoDB connection failed:", err);
-  });
+const startServer = async() => {
+  try{
+    await connectDB();
+    app.listen(PORT, () => {
+      console.log(`Server is running on port ${PORT}`);
+    });
+    } catch(error) {
+    console.error(`Error starting server: ${error.message}`);
+    process.exit(1);
+  }
+}
+
+startServer();
+
+export default app;
