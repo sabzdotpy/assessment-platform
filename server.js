@@ -59,8 +59,12 @@ app.use(`${APIV1}/admin`, adminRoutes);
 app.use(`${APIV1}/common/auth`, commonAuthRoutes);
 
 // Root route
-app.get("/", (req, res) => {
+app.get(`/`, (req, res) => {
   res.send("Assessment Platform API is running");
+});
+
+app.get(`${APIV1}`, (req, res) => {
+  res.status(200).json({ message: "API V1 is healthy" });
 });
 
 app.use(errorMiddleware);

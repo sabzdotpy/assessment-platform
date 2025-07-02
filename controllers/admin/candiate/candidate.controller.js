@@ -8,7 +8,7 @@ export const getAttemptByCandidate = async (req, res) => {
     const attempts = await AssessmentAttempt.find({
       candidateId: req.params.candidateId,
     });
-    return Response.success(res, 200, "Retrieved attempts by candidate.", attempts);
+    return Response.success(res, 200, "Retrieved attempts by candidate.", { attempts });
   } catch (error) {
     return Response.error(res, 500, error.message, error);
   }

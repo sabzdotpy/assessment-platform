@@ -5,6 +5,7 @@ import AssessmentAttempt from "../models/assessmentAttempt.model.js";
 import Question from "../models/question.model.js";
 
 import Response from "../utils/generateResponse.js";
+import Validator from "../utils/validators.js";
 
 import { HTTP_STATUS } from "../constants/enum/responseCodes.enum.js";
 
@@ -89,7 +90,7 @@ export const submitAttempt = async (req, res) => {
     );
 
     // res.status(200).json(updatedAttempt);
-    return Response.success(res, HTTP_STATUS.OK, "Attempt Submitted", updatedAttempt);
+    return Response.success(res, HTTP_STATUS.OK, "Attempt Submitted", { updatedAttempt });
 
   } catch (error) {
     // res.status(500).json({ message: error.message });
@@ -101,7 +102,18 @@ export const startAttempt = async (req, res) => {
   const candidateId = req.user.id;
   const assessmentId = req.params.assessmentId;
 
-  //check for id is valid or not
+  if (!assessmentId || !candidateId) {
+    return Response.error(res, HTTP_STATUS.BAD_REQUEST, "Assessment ID and Candidate ID are required.");
+  }
+
+  // ! not yet tested. test this endpoint after completing assessment model
+  if (!Validator.objectID(assessmentId)) {
+    return Response.error(res, HTTP_STATUS.BAD_REQUEST, "Invalid assessment ID.");
+  }
+
+  if (!Validator.objectID(candidateId)) {
+    return Response.error(res, HTTP_STATUS.BAD_REQUEST, "Invalid candidate ID.");
+  }
 
   try {
     // Prevent duplicate attempt
@@ -126,10 +138,7 @@ export const startAttempt = async (req, res) => {
     });
 
     if (!assessment) {
-      // return res
-      //   .status(404)
-      //   .json({ message: "Assessment is not available to attempt." });
-      return Response.error(res, HTTP_STATUS.NOT_FOUND, "Assessment is not available to attempt.",  new Error("Assessment not found in database."))
+      return Response.error(res, HTTP_STATUS.NOT_FOUND, "Assessment is not available to attempt.", new Error("Assessment not found in database or is not published."));
     }
 
     const attempt = await AssessmentAttempt.create({
@@ -137,10 +146,8 @@ export const startAttempt = async (req, res) => {
       assessmentId,
       startedAt: new Date(),
     });
-    // res.status(201).json(attempt);
-    return Response.success(res, HTTP_STATUS.CREATED, "Started attempt.", attempt);
+    return Response.success(res, HTTP_STATUS.CREATED, "Started attempt.", { attempt });
   } catch (error) {
-    // res.status(500).json({ message: error.message });
     return Response.error(res, HTTP_STATUS.INTERNAL_ERROR, error.message, error);
   }
 };
@@ -156,11 +163,9 @@ export const getMyAttempts = async (req, res) => {
       })
       .sort({ createdAt: -1 });
 
-    // res.status(200).json({ attempts });
-    return Response.success(res, HTTP_STATUS.OK, "Attempts retrieved.", attempts);
+    return Response.success(res, HTTP_STATUS.OK, "Attempts retrieved.", { attempts });
   } catch (error) {
-    // res.status(500).json({ message: "Failed to fetch your attempts", error });
-    return Response.error(res, HTTP_STATUS.INTERNAL_ERROR, "Failed to fetch your attempts.", error);
+    return Response.error(res, HTTP_STATUS.INTERNAL_ERROR, error.message, error);
   }
 };
 
@@ -184,15 +189,10 @@ export const getAttemptById = async (req, res) => {
 
     if (!attempt) {
       return Response.error(res, HTTP_STATUS.NOT_FOUND, "Attempt not found or access denied.", new Error("Attempt not found in database."));
-      // return res
-      //   .status(404)
-      //   .json({ message: "Attempt not found or access denied" });
     }
 
-    // res.status(200).json({ attempt });
-    return Response.success(res, HTTP_STATUS.OK, "Attempt retrieved.", attempt);
+    return Response.success(res, HTTP_STATUS.OK, "Attempt retrieved.", { attempt });
   } catch (error) {
-    // res.status(500).json({ message: "Failed to fetch attempt result", error });
-    return Response.error(res, HTTP_STATUS.INTERNAL_ERROR, "Error while retrieving attempt by ID", error);
+    return Response.error(res, HTTP_STATUS.INTERNAL_ERROR, error.message, error);
   }
 };

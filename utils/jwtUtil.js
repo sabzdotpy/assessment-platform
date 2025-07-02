@@ -37,14 +37,37 @@ const generateAdminToken = (adminID, expiresIn = "1d") => {
   );
 };
 
+const generateResetPasswordToken = (userID, userEmail, expiresIn = "30m") => {
+  return jwt.sign(
+    { id: userID, email: userEmail, action: "reset_password" },
+    process.env.JWT_SECRET,
+    { expiresIn }
+  );
+};
+
+const verifyResetPasswordToken = (token) => {
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    if (!decoded || decoded.action !== "reset_password") {
+        return null;
+    }
+
+    return decoded;
+  }
+  catch (error) {
+    return null;
+  }
+    
+};
+
 // Not handling errors here, routes should handle errors
 const verifyToken = (token) => {
     return jwt.verify(token, process.env.JWT_SECRET);
 };
 
-
 const decodeToken = (token) => {
     return jwt.decode(token);
 };
 
-export { generateToken, verifyToken, decodeToken, generateCandidateToken, generateTrainerToken, generateAdminToken };
+export { generateToken, verifyToken, decodeToken, generateCandidateToken, generateTrainerToken, generateAdminToken, generateResetPasswordToken, verifyResetPasswordToken };

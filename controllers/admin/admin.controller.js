@@ -16,7 +16,7 @@ export const addBulkUserFromCSV = async (req, res) => {
       return Response.error(res, HTTP_STATUS.BAD_REQUEST, "No valid users found in CSV.");
     }
     await bulkCreateCandidates(users);
-    return Response.success(res, HTTP_STATUS.CREATED, "Bulk users added from CSV.", users);
+    return Response.success(res, HTTP_STATUS.CREATED, "Bulk users added from CSV.", { users });
   } catch (error) {
     return Response.error(res, HTTP_STATUS.INTERNAL_ERROR, error.message, error);
   }

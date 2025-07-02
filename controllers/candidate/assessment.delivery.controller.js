@@ -38,7 +38,7 @@ export const getAvailableAssessments = async (req, res) => {
      */
 
     // res.status(200).json({ assessments });
-    return Response.success(res, HTTP_STATUS.OK, "Successfully retrieved assessments.", assessments);
+    return Response.success(res, HTTP_STATUS.OK, "Successfully retrieved assessments.", { assessments });
   } catch (error) {
     // res
     //   .status(500)
@@ -110,7 +110,7 @@ export const getAssessmentForCandidate = async (req, res) => {
     // });
 
     // res.status(200).json({ assessment });
-    return Response.success(res, HTTP_STATUS.OK, "Assessments retrieved", assessment);
+    return Response.success(res, HTTP_STATUS.OK, "Assessments retrieved", { assessment });
   } catch (error) {
     // res.status(500).json({ message: "Failed to load assessment", error });
     return Response.error(res, HTTP_STATUS.INTERNAL_ERROR, error.message, error);
