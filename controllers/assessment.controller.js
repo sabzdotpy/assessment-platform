@@ -6,26 +6,23 @@ import assessmentValidationSchema from "../schema/assessment_zod.js";
 
 import Response from "../utils/generateResponse.js";
 import { HTTP_STATUS } from "../constants/enum/responseCodes.enum.js";
+import envs from "../constants/enum/environments.enum.js";
+
+import { NODE_ENV } from "../config/env.js";
 
 export const createAssessment = async (req, res) => {
   const userId = req.user.id;
-  console.log(userId);
+  console.log( (NODE_ENV == envs.DEV) ? userId : "");
   try {
     const user = await User.findById(userId);
     console.log(user);
 
     if (!user) {
-      // res.status(500).json({ message: "User does not exist" });
       return Response.error(res, HTTP_STATUS.UNAUTHORIZED, "User does not exist.", new Error("User not found in db."));
     }
-    //destruct the content and validate - done with zod.
 
     const parsedData = assessmentValidationSchema.safeParse(req.body);
     if (!parsedData.success) {
-      // return res.status(400).json({
-      //   message: "Validation failed",
-      //   errors: parsedData.error.errors,
-      // });
       return Response.error(res, HTTP_STATUS.BAD_REQUEST, "Assessment validation failed.", parsedData.error.errors);
     }
 
@@ -38,7 +35,7 @@ export const createAssessment = async (req, res) => {
     return Response.success(res, HTTP_STATUS.CREATED, "Assessment created successfully.", assessment);
   } catch (error) {
     // res.status(500).json({ message: error.message });
-    return Response.error(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Error in assessment creation.", error);
+    return Response.error(res, HTTP_STATUS.INTERNAL_ERROR, "Error in assessment creation.", error);
   }
 };
 
@@ -49,7 +46,7 @@ export const getAllAssessments = async (req, res) => {
     return Response.success(res, HTTP_STATUS.OK, "Successfully retrieved all assessments.", assessments);
   } catch (error) {
     // res.status(500).json({ message: error.message });
-    return Response.error(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Error in getting all assessments.", error);
+    return Response.error(res, HTTP_STATUS.INTERNAL_ERROR, "Error in getting all assessments.", error);
   }
 };
 
@@ -62,7 +59,7 @@ export const getAssessmentById = async (req, res) => {
     return Response.success(res, HTTP_STATUS.OK, "Successfully retrieved assessment by ID.", assessment);
   } catch (error) {
     // res.status(500).json({ message: error.message });
-    return Response.error(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Error in retrieving all assessments.", error);
+    return Response.error(res, HTTP_STATUS.INTERNAL_ERROR, "Error in retrieving all assessments.", error);
   }
 };
 
@@ -91,7 +88,7 @@ export const publishAssessment = async (req, res) => {
     return Response.success(res, HTTP_STATUS.OK, `Assessment Status: ${publishStatus}`, assessment);
   } catch (error) {
     // res.status(500).json({ message: error.message });
-    return Response.error(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Error in publishing assessment.", error);
+    return Response.error(res, HTTP_STATUS.INTERNAL_ERROR, "Error in publishing assessment.", error);
   }
 };
 
@@ -140,6 +137,6 @@ export const assignGroupsToAssessment = async (req, res) => {
   } catch (err) {
     console.error("Error assigning groups:", err);
     // res.status(500).json({ message: "Internal server error" });
-    return Response.error(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Error in assigning groups to assessment.", error);
+    return Response.error(res, HTTP_STATUS.INTERNAL_ERROR, "Error in assigning groups to assessment.", error);
   }
 };

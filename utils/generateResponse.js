@@ -1,4 +1,5 @@
 import { HTTP_STATUS } from "../constants/enum/responseCodes.enum.js";
+import envs from "../constants/enum/environments.enum.js";
 
 class Response {
 
@@ -34,7 +35,7 @@ class Response {
             success: false,
             message: message.trim(),
             data: null,
-            error: (process.env.NODE_ENV === 'production') ? (error?.message || "") : (error?.stack || error || "No error object provided")
+            error: (process.env.NODE_ENV === envs.PROD) ? (error?.message || "") : (error?.stack || error || "No error object provided")
         });
     }
 

@@ -43,7 +43,7 @@ export const getAvailableAssessments = async (req, res) => {
     // res
     //   .status(500)
     //   .json({ message: "Failed to fetch available assessments", error });
-    return Response.error(res, HTTP_STATUS.INTERNAL_ERROR, "Failed to fetch available assessments.", error);
+    return Response.error(res, HTTP_STATUS.INTERNAL_ERROR, error.message, error);
   }
 };
 
@@ -113,6 +113,6 @@ export const getAssessmentForCandidate = async (req, res) => {
     return Response.success(res, HTTP_STATUS.OK, "Assessments retrieved", assessment);
   } catch (error) {
     // res.status(500).json({ message: "Failed to load assessment", error });
-    return Response.error(res, HTTP_STATUS.INTERNAL_ERROR, "Failed to load assessments.", error);
+    return Response.error(res, HTTP_STATUS.INTERNAL_ERROR, error.message, error);
   }
 };

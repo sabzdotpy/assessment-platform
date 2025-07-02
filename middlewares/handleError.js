@@ -1,4 +1,5 @@
 import { NODE_ENV } from "../config/env.js";
+import envs from "../constants/enum/environments.enum.js";
 
 const errorMiddleware = (err, req, res, next) => {
     try{
@@ -34,13 +35,13 @@ const errorMiddleware = (err, req, res, next) => {
         res.status(error.statusCode || 500).json({
             success: false,
             message: error.message || 'Server Error',
-            stack: NODE_ENV === 'production' ? null : err.stack
+            stack: NODE_ENV === envs.PROD ? null : err.stack
         });
     } catch (error) {
         res.status(500).json({
             success: false,
             message: 'Internal Server Error',
-            stack: NODE_ENV === 'production' ? null : error.stack
+            stack: NODE_ENV === envs.PROD ? null : error.stack
         });
         
     }
