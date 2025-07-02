@@ -4,6 +4,10 @@ import Assessment from "../models/assessment.model.js";
 import AssessmentAttempt from "../models/assessmentAttempt.model.js";
 import Question from "../models/question.model.js";
 
+import Response from "../utils/generateResponse.js";
+
+import { HTTP_STATUS } from "../constants/enum/responseCodes.enum.js";
+
 export const submitAttempt = async (req, res) => {
   const candidateId = req.user.id;
   const { attemptId } = req.params;
@@ -16,9 +20,10 @@ export const submitAttempt = async (req, res) => {
       status: assessmentAttemptStatus.IN_PROGRESS,
     });
     if (!attempt) {
-      return res
-        .status(404)
-        .json({ message: "Attempt not found or already submitted" });
+      return Response.error(res, 404, "Attempt not found or already submitted.", new Error("Attempt not found in database."))
+      // return res
+      //   .status(404)
+      //   .json({ message: "Attempt not found or already submitted" });
     }
 
     // Gather all questionIds
@@ -83,9 +88,12 @@ export const submitAttempt = async (req, res) => {
       { new: true }
     );
 
-    res.status(200).json(updatedAttempt);
+    // res.status(200).json(updatedAttempt);
+    return Response.success(res, 200, "Attempt Submitted", updatedAttempt);
+
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    // res.status(500).json({ message: error.message });
+    return Response.error(res, 500, error.message, error.toString());
   }
 };
 
@@ -118,9 +126,10 @@ export const startAttempt = async (req, res) => {
     });
 
     if (!assessment) {
-      return res
-        .status(404)
-        .json({ message: "Assessment is not available to attempt." });
+      // return res
+      //   .status(404)
+      //   .json({ message: "Assessment is not available to attempt." });
+      return Response.error(res, HTTP_STATUS.NOT_FOUND, "Assessment is not available to attempt.",  new Error("Assessment not found in database."))
     }
 
     const attempt = await AssessmentAttempt.create({
@@ -128,9 +137,11 @@ export const startAttempt = async (req, res) => {
       assessmentId,
       startedAt: new Date(),
     });
-    res.status(201).json(attempt);
+    // res.status(201).json(attempt);
+    return Response.success(res, HTTP_STATUS.CREATED, "Started attempt.", attempt);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    // res.status(500).json({ message: error.message });
+    return Response.error(res, 500, error.message, error);
   }
 };
 
@@ -145,9 +156,11 @@ export const getMyAttempts = async (req, res) => {
       })
       .sort({ createdAt: -1 });
 
-    res.status(200).json({ attempts });
+    // res.status(200).json({ attempts });
+    return Response.success(res, 200, "Attempts retrieved.", attempts);
   } catch (error) {
-    res.status(500).json({ message: "Failed to fetch your attempts", error });
+    // res.status(500).json({ message: "Failed to fetch your attempts", error });
+    return Response.error(res, 500, "Failed to fetch your attempts.", error);
   }
 };
 
@@ -170,13 +183,16 @@ export const getAttemptById = async (req, res) => {
       });
 
     if (!attempt) {
-      return res
-        .status(404)
-        .json({ message: "Attempt not found or access denied" });
+      return Response.error(res, 404, "Attempt not found or access denied.", new Error("Attempt not found in database."))
+      // return res
+      //   .status(404)
+      //   .json({ message: "Attempt not found or access denied" });
     }
 
-    res.status(200).json({ attempt });
+    // res.status(200).json({ attempt });
+    return Response.success(res, 200, "Attempt retrieved.", attempt);
   } catch (error) {
-    res.status(500).json({ message: "Failed to fetch attempt result", error });
+    // res.status(500).json({ message: "Failed to fetch attempt result", error });
+    return Response.error(res, 500, "Error while retrieving attempt by ID", error);
   }
 };
