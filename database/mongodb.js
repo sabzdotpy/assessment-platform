@@ -1,9 +1,9 @@
 import mongoose from 'mongoose';
-import { MONGODB_URI, NODE_ENV } from '../config/env';
+import { MONGODB_URI, NODE_ENV } from '../config/env.js';
 
 
 const connectDB = async() => {
-    if(!MONGODB_URI && !NODE_ENV){
+    if(!MONGODB_URI || !NODE_ENV){
         throw new Error('MONGODB_URI and NODE_ENV must be defined in the environment variables');
     }
     try {
