@@ -15,69 +15,27 @@ import assessmentRoutes from "./routes/assessment.routes.js";
 import sectionRoutes from "./routes/section.routes.js";
 import questionRoutes from "./routes/question.routes.js";
 
-import User from "./models/user.model.js";
+// Common Routes
+import commonAuthRoutes from "./routes/common/auth.routes.js";
+
 import authMiddleware from "./middlewares/auth.middleware.js";
 import connectDB from "./database/mongodb.js";
 import { PORT } from "./config/env.js";
 import errorMiddleware from "./middlewares/handleError.js";
 
-import Response from "./utils/generateResponse.js";
-import { HTTP_STATUS } from "./constants/enum/responseCodes.enum.js";
-
 dotenv.config();
 
 const app = express();
+
+app.use(express.json());
 
 app.use(cors({
   origin: "http://localhost:3000", 
   credentials: true,
 }));
 
-app.use(express.json());
 
-// Common Auth Routes (Register & Login)
-app.post("/api/auth/register", async (req, res) => {
-  const { name, email, password, role } = req.body;
-  try {
-    const existing = await User.findOne({ email });
-    if (existing) {
-      return Response.error(res, HTTP_STATUS.BAD_REQUEST, "User already exists.");
-      // return res.status(400).json({ message: "User already exists" });
-    }
-      
-
-    const user = await User.create({ name, email, password, role });
-    const token = jwt.sign(
-      { id: user._id, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: "1d" }
-    );
-    res.status(201).json({ token });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
-
-app.post("/api/auth/login", async (req, res) => {
-  const { email, password } = req.body;
-  try {
-    const user = await User.findOne({ email });
-    if (!user || user.password !== password) {
-      // return res.status(401).json({ message: "Invalid credentials" });
-      return Response.error(res, 401, "Invalid credentials.");
-    }
-    const token = jwt.sign(
-      { id: user._id, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: "1d" }
-    );
-    // res.json({ token });
-    return Response.success(res, HTTP_STATUS.OK, "Successfully logged in.", token);
-  } catch (error) {
-    // res.status(500).json({ message: error.message });
-    return Response.error(res, HTTP_STATUS.INTERNAL_ERROR, "Error while logging in.", error);
-  }
-});
+const APIV1 = "/api/v1";
 
 // common routes (For both admin and trainer)
 app.use(
@@ -85,15 +43,20 @@ app.use(
   authMiddleware(["admin", "trainer"]),
   assessmentRoutes
 );
-app.use("/api/sections", authMiddleware(["admin", "trainer"]), sectionRoutes);
-app.use("/api/questions", authMiddleware(["admin", "trainer"]), questionRoutes);
+app.use(`${APIV1}/sections`, authMiddleware(["admin", "trainer"]), sectionRoutes);
+app.use(`${APIV1}/questions`, authMiddleware(["admin", "trainer"]), questionRoutes);
 
 //candidate routes
-app.use("/api/v1/candidate/assessments", candidateAssessmentRoutes);
-app.use("/api/v1/candidate/attempts",authMiddleware([ "candidate"]) ,candidateAttemptRoutes);
+app.use(`${APIV1}/candidate/assessments`, candidateAssessmentRoutes);
+app.use(`${APIV1}/candidate/attempts`, authMiddleware(["candidate"]), candidateAttemptRoutes);
 
 //admin routes
-app.use("/api/v1/admin", adminRoutes);
+app.use(`${APIV1}/admin`, adminRoutes);
+
+// Common Auth Routes
+// * Note: currently only login/register routes are implemented, so no auth middleware is applied here.
+// * if needed, apply middleware to certain routes in common/auth.routes.js
+app.use(`${APIV1}/common/auth`, commonAuthRoutes);
 
 // Root route
 app.get("/", (req, res) => {
