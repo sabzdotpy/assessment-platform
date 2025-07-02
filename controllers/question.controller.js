@@ -4,6 +4,7 @@ import Section from "../models/section.model.js";
 import questionValidationSchema from "../schema/question_zod.js";
 
 import Response from "../utils/generateResponse.js";
+import { HTTP_STATUS } from "../constants/enum/responseCodes.enum.js";
 
 export const addQuestion = async (req, res) => {
   try {
@@ -11,7 +12,7 @@ export const addQuestion = async (req, res) => {
 
     const parsedData = questionValidationSchema.safeParse(req.body);
     if (!parsedData.success) {
-      return Response.error(res, 400, "Validation failed", parsedData.error.errors);
+      return Response.error(res, HTTP_STATUS.BAD_REQUEST, "Validation failed", parsedData.error.errors);
       // return res.status(400).json({
       //   message: "Validation failed",
       //   errors: parsedData.error.errors,
@@ -29,11 +30,11 @@ export const addQuestion = async (req, res) => {
     await currSection.save();
 
     // res.status(201).json(question);
-    return Response.success(res, 200, "Question added.", question);
+    return Response.success(res, HTTP_STATUS.CREATED, "Question added.", question);
 
   } catch (error) {
     // res.status(500).json({ message: error.message });
-    return Response.error(res, 500, "Error while adding question", error);
+    return Response.error(res, HTTP_STATUS.INTERNAL_ERROR, "Error while adding question", error);
   }
 };
 
@@ -42,9 +43,9 @@ export const getQuestionsBySection = async (req, res) => {
   try {
     const questions = await Question.find({ sectionId });
     // res.json(questions);
-    return Response.success(res, 200, "Retrieved questions by section.", questions);
+    return Response.success(res, HTTP_STATUS.OK, "Retrieved questions by section.", questions);
   } catch (error) {
     // res.status(500).json({ message: error.message });
-    return Response.error(res, 500, "Error while retrieving questions by section.", error);
+    return Response.error(res, HTTP_STATUS.INTERNAL_ERROR, "Error while retrieving questions by section.", error);
   }
 };

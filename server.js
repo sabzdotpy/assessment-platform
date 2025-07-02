@@ -20,6 +20,7 @@ import User from "./models/user.model.js";
 import authMiddleware from "./middlewares/auth.middleware.js";
 
 import Response from "./utils/generateResponse.js";
+import { HTTP_STATUS } from "./constants/enum/responseCodes.enum.js";
 
 dotenv.config();
 
@@ -34,7 +35,7 @@ app.post("/api/auth/register", async (req, res) => {
   try {
     const existing = await User.findOne({ email });
     if (existing) {
-      return Response.error(res, 400, "User already exists.");
+      return Response.error(res, HTTP_STATUS.BAD_REQUEST, "User already exists.");
       // return res.status(400).json({ message: "User already exists" });
     }
       
@@ -65,10 +66,10 @@ app.post("/api/auth/login", async (req, res) => {
       { expiresIn: "1d" }
     );
     // res.json({ token });
-    return Response.success(res, 200, "Successfully logged in.", token);
+    return Response.success(res, HTTP_STATUS.OK, "Successfully logged in.", token);
   } catch (error) {
     // res.status(500).json({ message: error.message });
-    return Response.error(res, 500, "Error while logging in.", error);
+    return Response.error(res, HTTP_STATUS.INTERNAL_ERROR, "Error while logging in.", error);
   }
 });
 

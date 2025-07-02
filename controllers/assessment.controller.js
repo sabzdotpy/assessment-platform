@@ -5,6 +5,7 @@ import Group from "../models/group.model.js";
 import assessmentValidationSchema from "../schema/assessment_zod.js";
 
 import Response from "../utils/generateResponse.js";
+import { HTTP_STATUS } from "../constants/enum/responseCodes.enum.js";
 
 export const createAssessment = async (req, res) => {
   const userId = req.user.id;
@@ -15,7 +16,7 @@ export const createAssessment = async (req, res) => {
 
     if (!user) {
       // res.status(500).json({ message: "User does not exist" });
-      return Response.error(res, 500, "User does not exist.", new Error("User not found in db."));
+      return Response.error(res, HTTP_STATUS.UNAUTHORIZED, "User does not exist.", new Error("User not found in db."));
     }
     //destruct the content and validate - done with zod.
 
@@ -25,7 +26,7 @@ export const createAssessment = async (req, res) => {
       //   message: "Validation failed",
       //   errors: parsedData.error.errors,
       // });
-      return Response.error(res, 400, "Assessment validation failed.", parsedData.error.errors);
+      return Response.error(res, HTTP_STATUS.BAD_REQUEST, "Assessment validation failed.", parsedData.error.errors);
     }
 
     const assessment = await Assessment.create({
@@ -34,10 +35,10 @@ export const createAssessment = async (req, res) => {
     });
 
     // res.status(201).json(assessment);
-    return Response.success(res, 201, "Assessment created successfully.", assessment);
+    return Response.success(res, HTTP_STATUS.CREATED, "Assessment created successfully.", assessment);
   } catch (error) {
     // res.status(500).json({ message: error.message });
-    return Response.error(res, 500, "Error in assessment creation.", error);
+    return Response.error(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Error in assessment creation.", error);
   }
 };
 
@@ -45,10 +46,10 @@ export const getAllAssessments = async (req, res) => {
   try {
     const assessments = await Assessment.find().populate("sections");
     // res.json(assessments);
-    return Response.success(res, 201, "Successfully retrieved all assessments.", assessments);
+    return Response.success(res, HTTP_STATUS.OK, "Successfully retrieved all assessments.", assessments);
   } catch (error) {
     // res.status(500).json({ message: error.message });
-    return Response.error(res, 500, "Error in getting all assessments.", error);
+    return Response.error(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Error in getting all assessments.", error);
   }
 };
 
@@ -58,10 +59,10 @@ export const getAssessmentById = async (req, res) => {
       "sections"
     );
     // res.json(assessment);
-    return Response.success(res, 201, "Successfully retrieved assessment by ID.", assessment);
+    return Response.success(res, HTTP_STATUS.OK, "Successfully retrieved assessment by ID.", assessment);
   } catch (error) {
     // res.status(500).json({ message: error.message });
-    return Response.error(res, 500, "Error in retrieving all assessments.", error);
+    return Response.error(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Error in retrieving all assessments.", error);
   }
 };
 
@@ -71,7 +72,7 @@ export const publishAssessment = async (req, res) => {
   try {
     const assessment = await Assessment.findById(assessmentId);
     if (!assessment) {
-      return Response.error(res, 404, "Assessment not found.");
+      return Response.error(res, HTTP_STATUS.NOT_FOUND, "Assessment not found.");
     }
 
     if (assessment.isPublished !== publishStatus) {
@@ -81,16 +82,16 @@ export const publishAssessment = async (req, res) => {
       // return res
       //   .status(400)
       //   .json({ message: `Assessment status is already ${publishStatus}` });
-      return Response.error(res, 400, `Assessment status is already ${publishStatus}`);
+      return Response.error(res, HTTP_STATUS.BAD_REQUEST, `Assessment status is already ${publishStatus}`);
     }
     // res.json({
     //   message: `Assessment status: ${publishStatus}`,
     //   assessment,
     // });
-    return Response.success(res, 200, `Assessment Status: ${publishStatus}`, assessment);
+    return Response.success(res, HTTP_STATUS.OK, `Assessment Status: ${publishStatus}`, assessment);
   } catch (error) {
     // res.status(500).json({ message: error.message });
-    return Response.error(res, 500, "Error in publishing assessment.", error);
+    return Response.error(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Error in publishing assessment.", error);
   }
 };
 
@@ -101,7 +102,7 @@ export const assignGroupsToAssessment = async (req, res) => {
 
   if (!Array.isArray(groupIds) || groupIds.length === 0) {
     // return res.status(400).json({ message: "groupIds must be a non-empty array" });
-    return Response.error(res, 400, "Group IDs must be a non-empty array.");
+    return Response.error(res, HTTP_STATUS.BAD_REQUEST, "Group IDs must be a non-empty array.");
   }
 
   try {
@@ -115,9 +116,9 @@ export const assignGroupsToAssessment = async (req, res) => {
       //   invalidIds: groupIds.filter((id) => !validGroupIds.includes(id)),
       // });
       return Response.error(
-        res, 
-        400, 
-        "Some group IDs are invalid.", 
+        res,
+        HTTP_STATUS.BAD_REQUEST,
+        "Some group IDs are invalid.",
         { invalidIDs: groupIds.filter((id) => !validGroupIds.includes(id)) }
       );
     }
@@ -131,14 +132,14 @@ export const assignGroupsToAssessment = async (req, res) => {
 
     if (!updatedAssessment) {
       // return res.status(404).json({ message: "Assessment not found" });
-      return Response.error(res, 404, "Assessment not found.");
+      return Response.error(res, HTTP_STATUS.NOT_FOUND, "Assessment not found.");
     }
 
     // res.status(200).json(updatedAssessment);
-    return Response.success(res, 200, "Assessment successfully assigned to group(s).", updatedAssessment);
+    return Response.success(res, HTTP_STATUS.OK, "Assessment successfully assigned to group(s).", updatedAssessment);
   } catch (err) {
     console.error("Error assigning groups:", err);
     // res.status(500).json({ message: "Internal server error" });
-    return Response.error(res, 500, "Error in assigning groups to assessment.", error);
+    return Response.error(res, HTTP_STATUS.INTERNAL_SERVER_ERROR, "Error in assigning groups to assessment.", error);
   }
 };

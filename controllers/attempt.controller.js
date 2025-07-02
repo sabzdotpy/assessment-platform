@@ -89,11 +89,11 @@ export const submitAttempt = async (req, res) => {
     );
 
     // res.status(200).json(updatedAttempt);
-    return Response.success(res, 200, "Attempt Submitted", updatedAttempt);
+    return Response.success(res, HTTP_STATUS.OK, "Attempt Submitted", updatedAttempt);
 
   } catch (error) {
     // res.status(500).json({ message: error.message });
-    return Response.error(res, 500, error.message, error.toString());
+    return Response.error(res, HTTP_STATUS.INTERNAL_ERROR, error.message, error.toString());
   }
 };
 
@@ -112,7 +112,7 @@ export const startAttempt = async (req, res) => {
 
     if (existing) {
       return res
-        .status(400)
+        .status(HTTP_STATUS.BAD_REQUEST)
         .json({ message: "You have already started this assessment." });
     }
 
@@ -141,7 +141,7 @@ export const startAttempt = async (req, res) => {
     return Response.success(res, HTTP_STATUS.CREATED, "Started attempt.", attempt);
   } catch (error) {
     // res.status(500).json({ message: error.message });
-    return Response.error(res, 500, error.message, error);
+    return Response.error(res, HTTP_STATUS.INTERNAL_ERROR, error.message, error);
   }
 };
 
@@ -157,10 +157,10 @@ export const getMyAttempts = async (req, res) => {
       .sort({ createdAt: -1 });
 
     // res.status(200).json({ attempts });
-    return Response.success(res, 200, "Attempts retrieved.", attempts);
+    return Response.success(res, HTTP_STATUS.OK, "Attempts retrieved.", attempts);
   } catch (error) {
     // res.status(500).json({ message: "Failed to fetch your attempts", error });
-    return Response.error(res, 500, "Failed to fetch your attempts.", error);
+    return Response.error(res, HTTP_STATUS.INTERNAL_ERROR, "Failed to fetch your attempts.", error);
   }
 };
 
@@ -183,16 +183,16 @@ export const getAttemptById = async (req, res) => {
       });
 
     if (!attempt) {
-      return Response.error(res, 404, "Attempt not found or access denied.", new Error("Attempt not found in database."))
+      return Response.error(res, HTTP_STATUS.NOT_FOUND, "Attempt not found or access denied.", new Error("Attempt not found in database."));
       // return res
       //   .status(404)
       //   .json({ message: "Attempt not found or access denied" });
     }
 
     // res.status(200).json({ attempt });
-    return Response.success(res, 200, "Attempt retrieved.", attempt);
+    return Response.success(res, HTTP_STATUS.OK, "Attempt retrieved.", attempt);
   } catch (error) {
     // res.status(500).json({ message: "Failed to fetch attempt result", error });
-    return Response.error(res, 500, "Error while retrieving attempt by ID", error);
+    return Response.error(res, HTTP_STATUS.INTERNAL_ERROR, "Error while retrieving attempt by ID", error);
   }
 };
