@@ -19,6 +19,8 @@ import questionRoutes from "./routes/question.routes.js";
 import User from "./models/user.model.js";
 import authMiddleware from "./middlewares/auth.middleware.js";
 
+import Response from "./utils/generateResponse.js";
+
 dotenv.config();
 
 const app = express();
@@ -31,8 +33,11 @@ app.post("/api/auth/register", async (req, res) => {
   const { name, email, password, role } = req.body;
   try {
     const existing = await User.findOne({ email });
-    if (existing)
-      return res.status(400).json({ message: "User already exists" });
+    if (existing) {
+      return Response.error(res, 400, "User already exists.");
+      // return res.status(400).json({ message: "User already exists" });
+    }
+      
 
     const user = await User.create({ name, email, password, role });
     const token = jwt.sign(
@@ -51,16 +56,19 @@ app.post("/api/auth/login", async (req, res) => {
   try {
     const user = await User.findOne({ email });
     if (!user || user.password !== password) {
-      return res.status(401).json({ message: "Invalid credentials" });
+      // return res.status(401).json({ message: "Invalid credentials" });
+      return Response.error(res, 401, "Invalid credentials.");
     }
     const token = jwt.sign(
       { id: user._id, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
     );
-    res.json({ token });
+    // res.json({ token });
+    return Response.success(res, 200, "Successfully logged in.", token);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    // res.status(500).json({ message: error.message });
+    return Response.error(res, 500, "Error while logging in.", error);
   }
 });
 
