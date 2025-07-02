@@ -2,6 +2,9 @@ import Assessment from "../../models/assessment.model.js";
 import AssessmentAttempt from "../../models/assessmentAttempt.model.js";
 import Group from "../../models/group.model.js"; // Needed for group membership resolution
 
+import Response from "../../utils/generateResponse.js";
+import { HTTP_STATUS } from "../../constants/enum/responseCodes.enum.js";
+
 export const getAvailableAssessments = async (req, res) => {
   try {
     const candidateId = req.user.id;
@@ -34,11 +37,13 @@ export const getAvailableAssessments = async (req, res) => {
     console.log(assessments);
      */
 
-    res.status(200).json({ assessments });
+    // res.status(200).json({ assessments });
+    return Response.success(res, HTTP_STATUS.OK, "Successfully retrieved assessments.", assessments);
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Failed to fetch available assessments", error });
+    // res
+    //   .status(500)
+    //   .json({ message: "Failed to fetch available assessments", error });
+    return Response.error(res, HTTP_STATUS.INTERNAL_ERROR, "Failed to fetch available assessments.", error);
   }
 };
 
@@ -49,7 +54,8 @@ export const getAssessmentForCandidate = async (req, res) => {
   const candidateId = req.user.id;
   const { assessmentId } = req.params;
   if (!mongoose.Types.ObjectId.isValid(assessmentId)) {
-    return res.status(400).json({ message: "Invalid assessment ID" });
+    // return res.status(400).json({ message: "Invalid assessment ID" });
+    return Response.error(res, HTTP_STATUS.BAD_REQUEST, "Invalid assessment ID");
   }
   // const now = new Date();
   console.log(candidateId, assessmentId);
@@ -64,9 +70,10 @@ export const getAssessmentForCandidate = async (req, res) => {
     console.log(alreadyAttempted);
 
     if (alreadyAttempted) {
-      return res.status(403).json({
-        message: "You have already attempted this assessment.",
-      });
+      // return res.status(403).json({
+      //   message: "You have already attempted this assessment.",
+      // });
+      return Response.error(res, HTTP_STATUS.FORBIDDEN, "You have already attempted this assessment.");
     }
 
     // Step 2: Get group IDs for the candidate
@@ -91,9 +98,10 @@ export const getAssessmentForCandidate = async (req, res) => {
     });
 
     if (!assessment) {
-      return res
-        .status(404)
-        .json({ message: "Assessment not found or not available to you." });
+      // return res
+      //   .status(404)
+      //   .json({ message: "Assessment not found or not available to you." });
+      return Response.error(res, HTTP_STATUS.NOT_FOUND, "Assessment not found or not available to you.");
     }
 
     // // Optional: Shuffle questions per section
@@ -101,8 +109,10 @@ export const getAssessmentForCandidate = async (req, res) => {
     //   section.questions = section.questions.sort(() => 0.5 - Math.random());
     // });
 
-    res.status(200).json({ assessment });
+    // res.status(200).json({ assessment });
+    return Response.success(res, HTTP_STATUS.OK, "Assessments retrieved", assessment);
   } catch (error) {
-    res.status(500).json({ message: "Failed to load assessment", error });
+    // res.status(500).json({ message: "Failed to load assessment", error });
+    return Response.error(res, HTTP_STATUS.INTERNAL_ERROR, "Failed to load assessments.", error);
   }
 };
